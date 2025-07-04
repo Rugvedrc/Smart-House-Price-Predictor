@@ -1,0 +1,6 @@
+Model,R2 Score,RMSE,MAE
+XGBoost,0.8761,72014.0,50469.75
+Random Forest,0.868,74324.65,51648.79
+Linear Regression,0.7181,108626.85,82911.26
+Lasso Regression,0.7181,108626.85,82911.36
+Ridge Regression,0.7181,108627.4,82911.54

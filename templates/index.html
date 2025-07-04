@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Price Prediction</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --accent-color: #4facfe;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --bg-dark: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --border-color: #30363d;
+            --border-hover: #484f58;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            transition: var(--transition);
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+        }
+
+        .header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .btn-premium {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            transition: var(--transition);
+        }
+
+        .btn-premium:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .btn-outline-premium {
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            background: transparent;
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: var(--transition);
+        }
+
+        .btn-outline-premium:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .prediction-form {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            background: var(--bg-tertiary);
+            border-color: var(--primary-color);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            outline: none;
+        }
+
+        .form-control::-webkit-input-placeholder {
+            color: var(--text-secondary);
+        }
+
+        .predict-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            color: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            transition: var(--transition);
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .prediction-result {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .prediction-result h3 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .price-amount {
+            background: linear-gradient(135deg, var(--success-color), #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            font-size: 2.5rem;
+        }
+
+        .explanation-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .explanation-title {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .price-breakdown {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .breakdown-item {
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .breakdown-item h6 {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .breakdown-item h4 {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .breakdown-item small {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .factor-list {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .factor-item {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .factor-item:last-child {
+            border-bottom: none;
+        }
+
+        .factor-item:hover {
+            background: rgba(102, 126, 234, 0.05);
+            transform: translateX(4px);
+        }
+
+        .factor-info h6 {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .factor-info p {
+            color: var(--text-secondary);
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .impact-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .impact-positive {
+            background: linear-gradient(135deg, var(--success-color), #059669);
+            color: white;
+        }
+
+        .impact-negative {
+            background: linear-gradient(135deg, var(--warning-color), #d97706);
+            color: white;
+        }
+
+        .chart-container {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .chart-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem;
+            border-radius: 8px 8px 0 0;
+            margin: -1.5rem -1.5rem 1.5rem;
+            font-weight: 600;
+        }
+
+        .chart-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .info-alert {
+            background: rgba(79, 172, 254, 0.1);
+            border: 1px solid rgba(79, 172, 254, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .info-alert h6 {
+            color: var(--accent-color);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .info-alert ul {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+
+        .info-alert li {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h2 {
+                font-size: 2rem;
+            }
+
+            .breakdown-item {
+                padding: 1rem 0.5rem;
+            }
+
+            .factor-item {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2><i class="fas fa-home"></i> Quick House Price Predictor</h2>
+            <p>Enter the details of a house to get a price estimate with AI-powered insights.</p>
+            <a href="/model-metrics" class="btn-outline-premium">
+                <i class="fas fa-chart-line"></i> View Model Comparison
+            </a>
+        </div>
+
+        <form method="POST" class="prediction-form">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-bed"></i> Bedrooms:</label>
+                    <input class="form-control" type="number" name="bedrooms" step="1" required value="3">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-bath"></i> Bathrooms:</label>
+                    <input class="form-control" type="number" name="bathrooms" step="0.5" required value="2">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-expand-arrows-alt"></i> Lot Area (sqft):</label>
+                    <input class="form-control" type="number" name="lot_area" required value="5000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-layer-group"></i> Floors:</label>
+                    <input class="form-control" type="number" name="floors" step="0.5" required value="1.5">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-water"></i> Waterfront (0/1):</label>
+                    <input class="form-control" type="number" name="waterfront" required value="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-eye"></i> Number of Views:</label>
+                    <input class="form-control" type="number" name="views" required value="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-star"></i> Condition (1-5):</label>
+                    <input class="form-control" type="number" name="condition" required value="3">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-award"></i> Grade (1-13):</label>
+                    <input class="form-control" type="number" name="grade" required value="7">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-home"></i> Living Area (sqft):</label>
+                    <input class="form-control" type="number" name="living_area" required value="1800">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-map-marker-alt"></i> Latitude:</label>
+                    <input class="form-control" type="number" name="latitude" step="any" required value="47.5">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-map-marker-alt"></i> Longitude:</label>
+                    <input class="form-control" type="number" name="longitude" step="any" required value="-122.2">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-tools"></i> Living Area (Renov):</label>
+                    <input class="form-control" type="number" name="living_area_renov" required value="1750">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-tools"></i> Lot Area (Renov):</label>
+                    <input class="form-control" type="number" name="lot_area_renov" required value="5000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-graduation-cap"></i> Schools Nearby:</label>
+                    <input class="form-control" type="number" name="schools" required value="2">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-plane"></i> Distance from Airport (km):</label>
+                    <input class="form-control" type="number" name="distance" required value="35">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-calendar-alt"></i> House Age:</label>
+                    <input class="form-control" type="number" name="house_age" required value="30">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-hammer"></i> Renovated (0/1):</label>
+                    <input class="form-control" type="number" name="renovated" required value="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-expand"></i> Total Area (sqft):</label>
+                    <input class="form-control" type="number" name="total_area" required value="2000">
+                </div>
+            </div>
+            <div class="text-center">
+                <button type="submit" class="predict-btn">
+                    <i class="fas fa-calculator"></i> Predict Price
+                </button>
+            </div>
+        </form>
+
+        {% if predicted_price %}
+        <div class="prediction-result">
+            <h3>Predicted Price: <span class="price-amount">₹{{ "%.2f"|format(predicted_price) }}</span></h3>
+        </div>
+        {% endif %}
+
+        {% if explanation %}
+        <div class="explanation-section">
+            <h4 class="explanation-title">💡 Why This Price? Understanding Your House Value</h4>
+            
+            <div class="price-breakdown">
+                <h5 class="text-center mb-4">Price Breakdown</h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="breakdown-item">
+                            <h6>Starting Price</h6>
+                            <h4 style="color: var(--primary-color);">₹{{ "%.0f"|format(explanation.base_price) }}</h4>
+                            <small>Average house price in area</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="breakdown-item">
+                            <h6>Features Adding Value</h6>
+                            <h4 style="color: var(--success-color);">+₹{{ "%.0f"|format(explanation.total_positive_impact) }}</h4>
+                            <small>Premium features boost</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="breakdown-item">
+                            <h6>Features Reducing Value</h6>
+                            <h4 style="color: var(--warning-color);">-₹{{ "%.0f"|format(explanation.total_negative_impact) }}</h4>
+                            <small>Factors that lower price</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="breakdown-item">
+                            <h6>Final Price</h6>
+                            <h4 style="color: var(--text-primary);">₹{{ "%.0f"|format(explanation.final_prediction) }}</h4>
+                            <small>Your house estimate</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="mb-3">🔍 Key Factors Affecting Your Price:</h5>
+                    <div class="factor-list">
+                        {% for item in explanation.explanations %}
+                        <div class="factor-item">
+                            <div class="factor-info">
+                                <h6>{{ item.friendly_name }}</h6>
+                                <p>{{ item.explanation }}</p>
+                            </div>
+                            <div class="impact-badge {{ 'impact-positive' if item.impact > 0 else 'impact-negative' }}">
+                                {{ "+" if item.impact > 0 else "" }}₹{{ "%.0f"|format(item.impact) }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h5 class="mb-0">📊 Visual Price Breakdown</h5>
+                        </div>
+                        <img src="data:image/png;base64,{{ shap_waterfall_plot }}" alt="Price Breakdown Chart" class="chart-image">
+                        <div class="mt-3">
+                            <small style="color: var(--text-secondary);">
+                                <strong>How to read this:</strong> We start with the average house price in your area, then add or subtract value based on your specific features to arrive at your final price estimate.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-alert">
+                <h6><i class="fas fa-lightbulb"></i> Understanding Your Estimate:</h6>
+                <ul>
+                    <li><strong>Green numbers</strong> show features that increase your house value</li>
+                    <li><strong>Orange numbers</strong> show features that decrease your house value</li>
+                    <li>The bigger the number, the bigger the impact on your final price</li>
+                    <li>This is an estimate based on similar houses in your area</li>
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

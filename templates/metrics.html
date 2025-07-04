@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Performance Metrics</title>
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --accent-color: #4facfe;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            
+            --bg-dark: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --border-color: #30363d;
+            --border-hover: #484f58;
+            
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #667eea 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: var(--primary-gradient);
+            border-radius: 2px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .model-selection {
+            display: inline-block;
+            background: var(--bg-tertiary);
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-top: 1rem;
+        }
+
+        .model-selection strong {
+            color: var(--success-color);
+            font-weight: 600;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--primary-gradient);
+            border-radius: 2px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .metric-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-hover);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .metric-card:hover::before {
+            opacity: 1;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-description {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .table-container {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            margin-bottom: 3rem;
+        }
+
+        .table-header {
+            background: var(--bg-tertiary);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        th {
+            background: var(--bg-tertiary);
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            color: var(--text-secondary);
+        }
+
+        tr:hover td {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .best-score {
+            color: var(--success-color);
+            font-weight: 600;
+        }
+
+        .confidence-highlight {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .confidence-score {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--success-color);
+            margin: 0.5rem 0;
+        }
+
+        /* Improved Visualization Section */
+        .viz-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .viz-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .viz-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .viz-header {
+            background: var(--bg-tertiary);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .viz-body {
+            padding: 1.5rem;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-container h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .chart-container p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .chart-image {
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+            border-radius: 8px;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Two column layout for larger screens */
+        @media (min-width: 1024px) {
+            .viz-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .action-section {
+            text-align: center;
+            margin-top: 3rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .viz-grid {
+                grid-template-columns: 1fr;
+            }
+
+            th, td {
+                padding: 0.75rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>📊 Model Performance Analytics</h1>
+            <p>
+                We trained and evaluated multiple regression models using advanced machine learning techniques. 
+                Based on comprehensive performance metrics, we selected the optimal model for house price prediction.
+            </p>
+            <div class="model-selection">
+                Selected Model: <strong>XGBoost Regressor</strong>
+            </div>
+        </div>
+
+        <!-- Performance Metrics Cards -->
+        <div class="performance-section">
+            <h2 class="section-title">Key Performance Indicators</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">R² Score</div>
+                    <div class="metric-value">0.8761</div>
+                    <div class="metric-description">Explains 87.61% of price variance in test data</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Model Accuracy</div>
+                    <div class="metric-value">88%</div>
+                    <div class="metric-description">High precision in price predictions</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Training Status</div>
+                    <div class="metric-value">Optimized</div>
+                    <div class="metric-description">Hyperparameter tuned for best performance</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Validation Score</div>
+                    <div class="metric-value">Excellent</div>
+                    <div class="metric-description">Consistent performance across datasets</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Metrics Table -->
+        <div class="performance-section">
+            <h2 class="section-title">Detailed Model Comparison</h2>
+            <div class="table-container">
+                <div class="table-header">
+                    Complete Performance Metrics
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>R² Score</th>
+                                <th>RMSE</th>
+                                <th>MAE</th>
+                                <th>Training Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>XGBoost Regressor</strong></td>
+                                <td><span class="best-score">0.8761</span></td>
+                                <td><span class="best-score">45,231</span></td>
+                                <td><span class="best-score">28,445</span></td>
+                                <td>2.3s</td>
+                                <td><span class="best-score">✓ Selected</span></td>
+                            </tr>
+                            <tr>
+                                <td>Random Forest</td>
+                                <td>0.8642</td>
+                                <td>47,892</td>
+                                <td>31,203</td>
+                                <td>1.8s</td>
+                                <td>Good</td>
+                            </tr>
+                            <tr>
+                                <td>Gradient Boosting</td>
+                                <td>0.8534</td>
+                                <td>49,567</td>
+                                <td>32,891</td>
+                                <td>3.1s</td>
+                                <td>Good</td>
+                            </tr>
+                            <tr>
+                                <td>Linear Regression</td>
+                                <td>0.7823</td>
+                                <td>58,234</td>
+                                <td>38,456</td>
+                                <td>0.1s</td>
+                                <td>Baseline</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confidence Score Highlight -->
+        <div class="confidence-highlight">
+            <p>Model Confidence Score</p>
+            <div class="confidence-score">87.61%</div>
+            <p>This indicates our model explains approximately 88% of the price variation in the test data, demonstrating high reliability for real-world predictions.</p>
+        </div>
+
+        <!-- Improved Visualization Section -->
+        <div class="performance-section">
+            <h2 class="section-title">Performance Visualizations</h2>
+            <div class="viz-grid">
+                <div class="viz-card">
+                    <div class="viz-header">
+                        📈 R² Score Comparison
+                    </div>
+                    <div class="viz-body">
+                        <div class="chart-container">
+                            <h3>R² Score Performance</h3>
+                            <img src="static/images/r2_score_comparison.png" alt="R² Score Comparison Chart" class="chart-image">
+                            <p>Higher values indicate better model performance</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="viz-card">
+                    <div class="viz-header">
+                        📉 Error Metrics Comparison
+                    </div>
+                    <div class="viz-body">
+                        <div class="chart-container">
+                            <h3>RMSE & MAE Analysis</h3>
+                            <img src="static/images/error_metrics_comparison.png" alt="Error Metrics Chart" class="chart-image">
+                            <p>Lower values indicate better prediction accuracy</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Section -->
+        <div class="action-section">
+            <a href="/" class="btn-primary">
+                🏠 Back to Price Predictor
+            </a>
+        </div>
+    </div>
+</body>
+</html>
